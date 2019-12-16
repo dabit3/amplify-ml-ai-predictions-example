@@ -1,0 +1,176 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Identify resource(s) stack creation using Amplify CLI",
+    "Parameters": {
+        "resourceName": {
+            "Type": "String"
+        },
+        "identifyPolicyName": {
+            "Type": "String"
+        },
+        "access": {
+            "Type": "String"
+        },
+        "authRoleName": {
+            "Type": "String"
+        },
+        "unauthRoleName": {
+            "Type": "String"
+        },
+        "adminAuthProtected": {
+            "Type": "String"
+        },
+        "adminGuestProtected": {
+            "Type": "String"
+        },
+        "identifyType": {
+            "Type": "String"
+        },
+        "type": {
+            "Type": "String"
+        },
+        "env": {
+            "Type": "String"
+        }
+    },
+    "Conditions": {
+        "CreateAdminAuthProtected": {
+            "Fn::Not": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "adminAuthProtected"
+                        },
+                        "DISALLOW"
+                    ]
+                }
+            ]
+        },
+        "CreateAdminGuestProtected": {
+            "Fn::Not": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "adminGuestProtected"
+                        },
+                        "DISALLOW"
+                    ]
+                }
+            ]
+        },
+        "ShouldNotCreateEnvResources": {
+            "Fn::Equals": [
+                {
+                    "Ref": "env"
+                },
+                "NONE"
+            ]
+        },
+        "AuthGuestRoleAccess": {
+            "Fn::Equals": [
+                {
+                    "Ref": "access"
+                },
+                "authAndGuest"
+            ]
+        }
+    },
+    "Outputs": {
+        "region": {
+            "Value": {
+                "Fn::FindInMap": [
+                    "RegionMapping",
+                    {
+                        "Ref": "AWS::Region"
+                    },
+                    {
+                        "Ref": "identifyType"
+                    }
+                ]
+            }
+        },
+        "type": {
+            "Value": {
+                "Ref": "type"
+            }
+        }
+    },
+    "Resources": {
+        "identifyLabelssPolicy": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": {
+                    "Ref": "identifyPolicyName"
+                },
+                "Roles": {
+                    "Fn::If": [
+                        "AuthGuestRoleAccess",
+                        [
+                            {
+                                "Ref": "authRoleName"
+                            },
+                            {
+                                "Ref": "unauthRoleName"
+                            }
+                        ],
+                        [
+                            {
+                                "Ref": "authRoleName"
+                            }
+                        ]
+                    ]
+                },
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": [
+                                "rekognition:DetectLabels",
+                                "rekognition:DetectModerationLabels"
+                            ],
+                            "Resource": "*"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "Mappings": {
+        "RegionMapping": {
+            "us-east-1": {
+                "identifyLabels": "us-east-1"
+            },
+            "us-east-2": {
+                "identifyLabels": "us-east-2"
+            },
+            "us-west-2": {
+                "identifyLabels": "us-west-2"
+            },
+            "eu-west-1": {
+                "identifyLabels": "eu-west-1"
+            },
+            "eu-west-2": {
+                "identifyLabels": "eu-west-2"
+            },
+            "eu-central-1": {
+                "identifyLabels": "eu-central-1"
+            },
+            "ap-northeast-1": {
+                "identifyLabels": "ap-northeast-1"
+            },
+            "ap-northeast-2": {
+                "identifyLabels": "ap-northeast-2"
+            },
+            "ap-southeast-1": {
+                "identifyLabels": "ap-southeast-1"
+            },
+            "ap-southeast-2": {
+                "identifyLabels": "ap-southeast-2"
+            },
+            "ap-south-1": {
+                "identifyLabels": "ap-south-1"
+            }
+        }
+    }
+}
